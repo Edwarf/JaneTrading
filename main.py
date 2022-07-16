@@ -5,6 +5,7 @@
 # 3) Run in loop: while true; do ./bot.py --test prod-like; sleep 1; done
 
 import argparse
+from pickle import NONE
 import uuid
 from collections import defaultdict, deque
 
@@ -31,6 +32,32 @@ team_name = "WHITETIPSHARKS"
 # before it will start making good trades!
 
 
+class MarketBook:
+    market_book = defaultdict(lambda: {"buy": [], "sell": []})
+
+    def add_to_book(self, trade):
+        self.market_book[trade["symbol"]][trade["dir"].lower()].append(
+            [trade["price"], trade["size"]])
+
+    def update_book(self, message):
+        self.market_book[message["symbol"]] = {
+            "buy": message["buy"], "sell": message["sell"]}
+
+    def check_if_offers(self, ticker, side):
+        first, second = self.best_price_quant(ticker, side)
+        return first is not None
+
+    def best_price_quant(self, ticker, side):
+        if self.market_book[ticker][side]:
+            return self.market_book[ticker][side][0][0], self.market_book[ticker][side][0][1]
+        else:
+            if side == "buy":
+                return Constants.BIG_ORDER, Constants.BIG_ORDER
+            else:
+                return 0, 0
+
+    def best_price_both(self, ticker):
+        return self.best_price_quant(ticker, "buy")[0], self.best_price_quant(ticker, "sell")[0]
 class Utils:
     @staticmethod
     def best_price(message, side):
@@ -83,6 +110,24 @@ class Constants:
 class Ledger:
     current_id = 0
     assets = defaultdict(lambda: 0)
+    open_orders = defaultdict(lambda: NONE)
+    our_book = MarketBook()
+
+    @staticmethod
+    def addOpen(order_id, symbol, dir, price, size):
+        Ledger.open_orders[order_id] = {"symbol": symbol, "dir": dir, "price": price, "size": size}
+
+    @staticmethod
+    def confirmOrder(orderId):
+        Ledger.our_book.add_to_book(Ledger.open_orders[orderId])
+        del Ledger.open_orders[orderId]
+
+    @staticmethod
+    def failOrder(orderId):
+        del Ledger.open_orders[orderId]
+
+def handle_xlf(message):
+    bid_price, ask_price = Utils.bid_ask_info(message)
 
 
 def main():
@@ -221,6 +266,7 @@ class ExchangeConnection:
     def send_add_message(
         self, order_id: int, symbol: str, dir: Dir, price: int, size: int
     ):
+        Ledger.addOpen(order_id, symbol, dir, price, size)
         """Add a new order"""
         self._write_message(
             {
@@ -261,7 +307,7 @@ class ExchangeConnection:
         return s.makefile("rw", 1)
 
     def _write_message(self, message):
-        Ledger.current_id += 1
+        Ledger.current_id += 1        
         json.dump(message, self.exchange_socket)
         self.exchange_socket.write("\n")
 
@@ -312,30 +358,6 @@ def parse_arguments():
 
     return args
 
-
-class MarketBook:
-    market_book = defaultdict(lambda: {"buy": [], "sell": []})
-
-    def update_book(self, message):
-        self.market_book[message["symbol"]] = {
-            "buy": message["buy"], "sell": message["sell"]}
-
-    def check_if_offers(self, ticker, side):
-        first, second = self.best_price_quant(ticker, side)
-        return first is not None and second is not None
-
-
-    def best_price_quant(self, ticker, side):
-        if self.market_book[ticker][side]:
-            return self.market_book[ticker][side][0][0], self.market_book[ticker][side][0][1]
-        else:
-            if side == "buy":
-                return Constants.BIG_ORDER, Constants.BIG_ORDER
-            else:
-                return 0, 0
-
-    def best_price_both(self, ticker):
-        return self.best_price_quant(ticker, "buy")[0], self.best_price_quant(ticker, "sell")[0]
 
 if __name__ == "__main__":
     # Check that [team_name] has been updated.
