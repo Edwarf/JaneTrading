@@ -122,6 +122,11 @@ class Utils:
             if -OwnedAssets.assetTable[ticker] < LIQUIDITY_CAP:
                 exchange.send_add_message(Ledger.current_id, ticker, Dir.SELL, fair_value, volume)
 
+    @staticmethod
+    def dump_inventory(exchange, ticker, price, fair_value):
+        if price > fair_value:
+            exchange.send_add_message(Ledger.current_id, ticker, Dir.SELL, price, OwnedAssets.assetTable[ticker]//2)
+
 
 class Constants:
     WAIT_TIME = .25
@@ -245,37 +250,49 @@ def main():
             ### XLF TRADING ALGORITHM
             xlf_bid, xlf_ask = market_book.best_price_both("XLF")
             xlf_equiv_bid, xlf_equiv_ask = Utils.get_xlf_equivalents(market_book)
-            Utils.trade_fair_value(exchange, "XLF", xlf_bid, xlf_equiv_bid, 1)
-            Utils.trade_fair_value(exchange, "XLF", xlf_ask, xlf_equiv_ask, 1)
+            #Utils.trade_fair_value(exchange, "XLF", xlf_bid, xlf_equiv_bid, 1)
+            #Utils.trade_fair_value(exchange, "XLF", xlf_ask, xlf_equiv_ask, 1)
 
+            #Utils.dump_inventory(exchange, "XLF", xlf_bid, xlf_equiv_bid)
+            #Utils.dump_inventory(exchange, "XLF", xlf_ask, xlf_equiv_ask)
 
             ### BOND TRADING ALGORITHM
 
             bond_bid, bond_ask = market_book.best_price_both("BOND")
             bond_fair_value = 1000
-            Utils.trade_fair_value(exchange, "BOND", bond_bid, bond_fair_value, 1)
-            Utils.trade_fair_value(exchange, "BOND", bond_ask, bond_fair_value, 1)
+            #Utils.trade_fair_value(exchange, "BOND", bond_bid, bond_fair_value, 1)
+            #Utils.trade_fair_value(exchange, "BOND", bond_ask, bond_fair_value, 1)
 
             ### VALE/VALBZ TRADING ALGORITHM
 
             # Note that VALUE is more liquid than VALBE, so we trade VALE and use VALBZ as the source of truth.
 
             vale_bid, vale_ask = market_book.best_price_both("VALE")
+            vale_fair_value = (vale_bid + vale_ask)
             valbz_bid, valbz_ask = market_book.best_price_both("VALBZ")
-            Utils.trade_fair_value_capped(exchange, "VALE", vale_bid, valbz_bid, 1, 5)
-            Utils.trade_fair_value_capped(exchange, "VALE", vale_ask, valbz_ask, 1, 5)
+            valbz_fair_value = (valbz_ask + valbz_bid)
+            if valbz_fair_value - vale_fair_value > 10:
+                exchange.send_add_message(Ledger.current_id, "VALBZ", Dir.SELL, 1, valbz_bid-1)
+                exchange.send_add_message(Ledger.current_id, "VALE", Dir.BUY, 1, vale_ask+1)
+                exchange.send_convert_message(Ledger.current_id, "VALE", Dir.SELL, 1)
+            elif vale_fair_value - valbz_fair_value > 10:
+                exchange.send_add_message(Ledger.current_id, "VALE", Dir.SELL, 1, vale_bid-1)
+                exchange.send_add_message(Ledger.current_id, "VALBZ", Dir.BUY, 1, valbz_ask+1)
+                exchange.send_convert_message(Ledger.current_id, "VALE", Dir.BUY, 1)
+
+
 
             trade_time = time.time()
-
             currentTime = time.time()
             for i, group in enumerate(Ledger.times):
                 if currentTime - group[1] > Constants.REFRESH_TIME and group[0] in Ledger.open_orders:
                     print("Kill", group[1])
                     exchange.send_cancel_message(group[0])
-
                 if currentTime - group[1] < Constants.REFRESH_TIME:
                     Ledger.times = Ledger.times[i:]
                     break
+            # Make profitable trades with selling current inventory
+
             #print(len(Ledger.times))
 
 
