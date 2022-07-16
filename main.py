@@ -195,8 +195,8 @@ def main():
 
         # Guaranteed Actions
 
-        exchange.send_add_message(Ledger.current_id, "BOND", Dir.BUY, 999, 1)
-        exchange.send_add_message(Ledger.current_id, "BOND", Dir.SELL, 1001, 1)
+        #exchange.send_add_message(Ledger.current_id, "BOND", Dir.BUY, 999, 1)
+        #exchange.send_add_message(Ledger.current_id, "BOND", Dir.SELL, 1001, 1)
 
         if message["type"] == "close":
             print("The round has ended")
@@ -216,7 +216,6 @@ def main():
             market_book.update_book(message)
 
         if time.time() - trade_time > Constants.WAIT_TIME:
-            print("Trading window")
             # if message["symbol"] == "BOND":
             #     continue
             #     buyInfo = market_book.best_price_quant("BOND", "buy")
