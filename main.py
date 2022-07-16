@@ -235,7 +235,7 @@ def main():
         elif message["type"] == "out":
             Ledger.outOrder(message["order_id"])
         elif message["type"] == "reject":
-            print(message)
+            print(message, Ledger.pending_orders[message["order_id"]])
         elif message["type"] == "fill":
             OwnedAssets.updateAssets(message["symbol"], message["size"], message["dir"])
         elif message["type"] == "book":
