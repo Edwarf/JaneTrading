@@ -124,7 +124,7 @@ class Utils:
 
 
 class Constants:
-    WAIT_TIME = .25
+    WAIT_TIME = .15
     REFRESH_TIME = 10
     BIG_ORDER = 30*10*10
     LIQUIDITY_CAP = 30
@@ -269,11 +269,11 @@ def main():
 
             currentTime = time.time()
             for i, group in enumerate(Ledger.times):
-                if currentTime - group[1] > 10 and group[0] in Ledger.open_orders:
+                if currentTime - group[1] > Constants.REFRESH_TIME and group[0] in Ledger.open_orders:
                     print("Kill", group[1])
                     exchange.send_cancel_message(group[0])
 
-                if currentTime - group[1] < 10:
+                if currentTime - group[1] < Constants.REFRESH_TIME:
                     Ledger.times = Ledger.times[i:]
                     break
             #print(len(Ledger.times))
