@@ -74,8 +74,9 @@ class Utils:
         gs_bid, gs_ask = market_book.best_price_both("GS")
         ms_bid, ms_ask = market_book.best_price_both("MS")
         wfc_bid, wfc_ask = market_book.best_price_both("WFC")
-        xlf_equiv_bid = 3*bond_bid + 2*gs_bid + 3*ms_bid + 2*wfc_bid
-        xlf_equiv_ask = 3*bond_ask + 2*bond_ask + 3*ms_ask + 2*wfc_ask
+        xlf_equiv_bid = int((3*bond_bid + 2*gs_bid + 3*ms_bid + 2*wfc_bid)/10)
+        xlf_equiv_ask = int((3*bond_ask + 2*bond_ask + 3*ms_ask + 2*wfc_ask)/10)
+
         return xlf_equiv_bid, xlf_equiv_ask
 
     @staticmethod
@@ -101,10 +102,8 @@ class Utils:
         exchange.send_add_message(Ledger.current_id, "WFC", Dir.BUY, wfc_ask, 2)
 
 
-
-
 class Constants:
-    WAIT_TIME = 30*10**6
+    WAIT_TIME = 3
     BIG_ORDER = 30*10*10
 
 
@@ -133,6 +132,7 @@ class Ledger:
 
 def handle_xlf(message):
     bid_price, ask_price = Utils.bid_ask_info(message)
+
 
 def main():
     args = parse_arguments()
@@ -209,8 +209,14 @@ def main():
             #    if buyInfo is not None and sellInfo[0] > 1000:
             #        exchange.send_add_message(orderIdNum, "BOND", "SELL", buyInfo[0] - 1, buyInfo[1])
 
-            if message["symbol"] == "VALE":
-                print(message)
+            if message["symbol"] == "BOND":
+                # We'll implement a pennying algorithm for VALE
+                if not(market_book.check_if_offers("VALUE", "buy") and market_book.check_if_offers("VALE", "sell")):
+                    continue
+                bid, ask = market_book.best_price_both("VALE")
+                # Beat both by 1
+                exchange.send_add_message(Ledger.current_id, "VALE", Dir.BUY, bid+1, 1)
+                exchange.send_add_message(Ledger.current_id, "VALE", Dir.SELL, ask-1, 1)
 
             if message["symbol"] == "XLF":
                 # Calculate XLF rates
@@ -226,6 +232,7 @@ def main():
                 elif xlf_bid < xlf_equiv_bid:
                     exchange.send_add_message(Ledger.current_id, "XLF", Dir.BUY, xlf_ask, 10)
                     Utils.sell_xlf_equivalents(market_book, exchange)
+            time.sleep(Constants.WAIT_TIME)
 
 
 
