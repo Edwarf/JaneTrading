@@ -262,8 +262,8 @@ def main():
 
             vale_bid, vale_ask = market_book.best_price_both("VALE")
             valbz_bid, valbz_ask = market_book.best_price_both("VALBZ")
-            Utils.trade_fair_value(exchange, "VALE", vale_bid, valbz_bid, 1)
-            Utils.trade_fair_value(exchange, "VALE", vale_ask, valbz_ask, 1)
+            Utils.trade_fair_value_capped(exchange, "VALE", vale_bid, valbz_bid, 1, 5)
+            Utils.trade_fair_value_capped(exchange, "VALE", vale_ask, valbz_ask, 1, 5)
 
             trade_time = time.time()
 
