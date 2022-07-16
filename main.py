@@ -241,6 +241,15 @@ def parse_arguments():
 
     return args
 
+class MarketBook:
+    market_book = defaultdict(lambda: {Dir.BUY: [], Dir.SELL: []})
+
+    def update_book(self, message):
+        self.market_book[message["symbol"]] = {Dir.BUY: message["buy"], Dir.SELL: message["sell"]}
+
+    def best_price_quant(self, ticker, side):
+        if self.market_book[ticker][side]:
+            return (self.market_book[side][0][0], self.market_book[side][0][1])
 
 if __name__ == "__main__":
     # Check that [team_name] has been updated.
@@ -251,12 +260,4 @@ if __name__ == "__main__":
     main()
 
 
-class MarketBook:
-    market_book = defaultdict(lambda: {Dir.BUY: [], Dir.SELL: []})
 
-    def update_book(self, message):
-        self.market_book[message["symbol"]] = {Dir.BUY: message["buy"], Dir.SELL: message["sell"]}
-
-    def best_price_quant(self, ticker, side):
-        if self.market_book[ticker][side]:
-            return (self.market_book[side][0][0], self.market_book[side][0][1])
