@@ -90,11 +90,11 @@ def main():
                 buyInfo = market_book.best_price_quant("BOND", "buy")
                 if buyInfo[0] > 1000:
                     exchange.send_add_message(
-                        orderIdNum, "BOND", "sell", buyInfo[0], buyInfo[1] // 2)
+                        orderIdNum, "BOND", "SELL", buyInfo[0], buyInfo[1] // 2)
                     orderIdNum += 1
                 sellInfo = market_book.best_price_quant("BOND", "sell")
                 if sellInfo[0] < 1000:
-                    exchange.send_add_message(orderIdNum, "BOND", "buy", buyInfo[0], buyInfo[1] // 2)
+                    exchange.send_add_message(orderIdNum, "BOND", "BUY", buyInfo[0], buyInfo[1] // 2)
 
             if message["symbol"] == "VALE":
 
@@ -243,11 +243,11 @@ def parse_arguments():
 
 
 class MarketBook:
-    market_book = defaultdict(lambda: {Dir.BUY: [], Dir.SELL: []})
+    market_book = defaultdict(lambda: {"buy": [], "sell": []})
 
     def update_book(self, message):
         self.market_book[message["symbol"]] = {
-            Dir.BUY: message["buy"], Dir.SELL: message["sell"]}
+            "buy": message["buy"], "sell": message["sell"]}
 
     def best_price_quant(self, ticker, side):
         print(self.market_book, ticker, side)
