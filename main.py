@@ -101,6 +101,29 @@ class Utils:
         exchange.send_add_message(Ledger.current_id, "WFC", Dir.BUY, wfc_ask, 2)
 
     @staticmethod
+    def trade_gs_eq(exchange, market_book, quantity, dir):
+        gs_bid, gs_ask = market_book.best_price_both("GS")
+        exchange.send_add_message(Ledger.current_id, "GS", dir, gs_bid + gs_ask // 2, quantity)
+
+    @staticmethod
+    def trade_ms_eq(exchange, market_book, quantity, dir):
+        gs_bid, gs_ask = market_book.best_price_both("MS")
+        exchange.send_add_message(
+            Ledger.current_id, "MS", dir, gs_bid + gs_ask // 2, quantity)
+
+    @staticmethod
+    def trade_wfc_eq(exchange, market_book, quantity, dir):
+        gs_bid, gs_ask = market_book.best_price_both("WFC")
+        exchange.send_add_message(
+            Ledger.current_id, "WFC", dir, gs_bid + gs_ask // 2, quantity)
+
+    @staticmethod
+    def trade_bond_eq(exchange, market_book, quantity, dir):
+        gs_bid, gs_ask = market_book.best_price_both("BOND")
+        exchange.send_add_message(
+            Ledger.current_id, "BOND", dir, gs_bid + gs_ask // 2, quantity)
+
+    @staticmethod
     def trade_fair_value(exchange, ticker, price, fair_value, volume):
         if price > fair_value:
             exchange.send_add_message(Ledger.current_id, ticker, Dir.SELL, price, volume)
@@ -132,6 +155,8 @@ class Ledger:
     pending_orders = defaultdict(lambda: NONE)
     open_orders = defaultdict(lambda: NONE)
     times = []
+    XLFBuy = None
+    XLFSell = None
 
     @staticmethod
     def addOpen(order_id, symbol, dir, price, size):
@@ -211,6 +236,18 @@ def main():
             print("The round has ended")
             break
         elif message["type"] == "ack":
+            if message["order_id"] == Ledger.XLFBuy:
+                Utils.trade_gs_eq(exchange, market_book, 2, Dir.BUY)
+                Utils.trade_ms_eq(exchange, market_book, 3, Dir.BUY)
+                Utils.trade_wfc_eq(exchange, market_book, 2, Dir.BUY)
+                Utils.trade_bond_eq(exchange, market_book, 3, Dir.BUY)
+                Ledger.XLFBuy = None
+            if message["order_id"] == Ledger.XLFSell:
+                Utils.trade_gs_eq(exchange, market_book, 2, Dir.SELL)
+                Utils.trade_ms_eq(exchange, market_book, 3, Dir.SELL)
+                Utils.trade_wfc_eq(exchange, market_book, 2, Dir.SELL)
+                Utils.trade_bond_eq(exchange, market_book, 3, Dir.SELL)
+                Ledger.XLFSell = None
             Ledger.confirmOrder(message["order_id"])
         elif message["type"] == "error":
             Ledger.failOrder(message["order_id"])
@@ -218,6 +255,10 @@ def main():
         elif message["type"] == "out":
             Ledger.outOrder(message["order_id"])
         elif message["type"] == "reject":
+            if message["order_id"] == Ledger.XLFBuy:
+                Ledger.XLFBuy = None
+            if message["order_id"] == Ledger.XLFSell:
+                Ledger.XLFSell = None
             print(message)
         elif message["type"] == "fill":
             OwnedAssets.updateAssets(message["symbol"], message["size"], message["dir"])
@@ -249,6 +290,16 @@ def main():
             valbz_bid, valbz_ask = market_book.best_price_both("VALBZ")
             Utils.trade_fair_value(exchange, "VALE", vale_bid, valbz_bid, 1)
             Utils.trade_fair_value(exchange, "VALE", vale_ask, valbz_ask, 1)
+
+            #XLF breakage
+            #if abs(OwnedAssets.assetTable["XLF"]) > 50:
+            if Ledger.XLFSell is not None and OwnedAssets.assetTable["XLF"] >= 50:
+                Ledger.XLFSell = Ledger.current_id
+                exchange.send_convert_message(Ledger.current_id, "XFR", Dir.SELL, 10)
+            elif Ledger.XLFBuy is not None and OwnedAssets.assetTable["XLF"] <= -50:
+                Ledger.XLFBuy = Ledger.current_id
+                exchange.send_convert_message(
+                    Ledger.current_id, "XFR", Dir.BUY, 10)
 
             trade_time = time.time()
 
