@@ -160,6 +160,8 @@ def main():
                 print(message)
 
             if message["symbol"] == "XLF":
+                if not market_book.check_if_offers("XLF", "buy") or not market_book.check_if_offers("XLF", "sell"):
+                    continue
                 # Calculate XLF rates
                 xlf_bid, xlf_ask = market_book.best_price_both("XLF")
 
@@ -313,6 +315,10 @@ class MarketBook:
     def update_book(self, message):
         self.market_book[message["symbol"]] = {
             "buy": message["buy"], "sell": message["sell"]}
+
+    def check_if_offers(self, ticker, side):
+        first, second = self.best_price_quant(ticker, side)
+        return first is not None
 
     def best_price_quant(self, ticker, side):
         if self.market_book[ticker][side]:
