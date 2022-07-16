@@ -157,18 +157,7 @@ def main():
             #        exchange.send_add_message(orderIdNum, "BOND", "SELL", buyInfo[0] - 1, buyInfo[1])
 
             if message["symbol"] == "VALE":
-
-                vale_bid_price, vale_ask_price = Utils.bid_ask_info("buy")
-                now = time.time()
-
-                if now > vale_last_print_time + 1:
-                    vale_last_print_time = now
-                    print(
-                        {
-                            "vale_bid_price": vale_bid_price,
-                            "vale_ask_price": vale_ask_price,
-                        }
-                    )
+                print(message)
 
             if message["symbol"] == "XLF":
                 # Calculate XLF rates
