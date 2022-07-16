@@ -113,7 +113,7 @@ class Utils:
 
 class Constants:
     WAIT_TIME = .1
-    REFRESH_TIME = 10
+    REFRESH_TIME = 5
     BIG_ORDER = 30*10*10
 
 
