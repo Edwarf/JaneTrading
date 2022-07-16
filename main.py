@@ -241,11 +241,13 @@ def parse_arguments():
 
     return args
 
+
 class MarketBook:
     market_book = defaultdict(lambda: {Dir.BUY: [], Dir.SELL: []})
 
     def update_book(self, message):
-        self.market_book[message["symbol"]] = {Dir.BUY: message["buy"], Dir.SELL: message["sell"]}
+        self.market_book[message["symbol"]] = {
+            Dir.BUY: message["buy"], Dir.SELL: message["sell"]}
 
     def best_price_quant(self, ticker, side):
         if self.market_book[ticker][side]:
