@@ -112,7 +112,7 @@ class Utils:
 
 
 class Constants:
-    WAIT_TIME = 1
+    WAIT_TIME = .25
     BIG_ORDER = 30*10*10
 
 
@@ -192,12 +192,6 @@ def main():
         # message because it can be a lot of information to read. Instead, let
         # your code handle the messages and just print the information
         # important for you!
-
-        # Guaranteed Actions
-
-        exchange.send_add_message(Ledger.current_id, "BOND", Dir.BUY, 999, 1)
-        exchange.send_add_message(Ledger.current_id, "BOND", Dir.SELL, 1001, 1)
-
         if message["type"] == "close":
             print("The round has ended")
             break
@@ -215,20 +209,8 @@ def main():
         elif message["type"] == "book":
             market_book.update_book(message)
 
-        if time.time() - trade_time > Constants.WAIT_TIME:
-            # if message["symbol"] == "BOND":
-            #     continue
-            #     buyInfo = market_book.best_price_quant("BOND", "buy")
-            #     if buyInfo is not None and buyInfo[0] < 1000:
-            #          exchange.send_add_message(
-            #             orderIdNum, "BOND", "BUY", buyInfo[0] + 1, buyInfo[1])
-            #          time.sleep(Constants.WAIT_TIME)
-            #     sellInfo = market_book.best_price_quant("BOND", "sell")
-            #     if buyInfo is not None and sellInfo[0] > 1000:
-            #          exchange.send_add_message(orderIdNum, "BOND", "SELL", buyInfo[0] - 1, buyInfo[1])
-            #          time.sleep(Constants.WAIT_TIME)
-
-        
+        if (time.time() - trade_time) > Constants.WAIT_TIME:
+            print('TRADING WINDOW')
             # Calculate XLF rates
             xlf_bid, xlf_ask = market_book.best_price_both("XLF")
             # Calculate market equivalent of XLF
@@ -388,4 +370,14 @@ if __name__ == "__main__":
 
     main()
 
-
+# if message["symbol"] == "BOND":
+#     continue
+#     buyInfo = market_book.best_price_quant("BOND", "buy")
+#     if buyInfo is not None and buyInfo[0] < 1000:
+#          exchange.send_add_message(
+#             orderIdNum, "BOND", "BUY", buyInfo[0] + 1, buyInfo[1])
+#          time.sleep(Constants.WAIT_TIME)
+#     sellInfo = market_book.best_price_quant("BOND", "sell")
+#     if buyInfo is not None and sellInfo[0] > 1000:
+#          exchange.send_add_message(orderIdNum, "BOND", "SELL", buyInfo[0] - 1, buyInfo[1])
+#          time.sleep(Constants.WAIT_TIME)
