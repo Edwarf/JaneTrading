@@ -5,6 +5,7 @@
 # 3) Run in loop: while true; do ./bot.py --test prod-like; sleep 1; done
 
 import argparse
+import uuid
 from collections import defaultdict, deque
 
 from enum import Enum
@@ -29,6 +30,7 @@ team_name = "WHITETIPSHARKS"
 # code is intended to be a working example, but it needs some improvement
 # before it will start making good trades!
 
+
 class Utils:
     @staticmethod
     def best_price(message, side):
@@ -38,6 +40,24 @@ class Utils:
     @staticmethod
     def bid_ask_info(message):
         return Utils.best_price(message, "buy"), Utils.best_price(message, "sell")
+
+    @staticmethod
+    def get_xlf_equivalents(market_book):
+        bond_bid, bond_ask = market_book.best_price_both("BOND")
+        gs_bid, gs_ask = market_book.best_price_both("GS")
+        ms_bid, ms_ask = market_book.best_price_both("MS")
+        wfc_bid, wfc_ask = market_book.best_price_both("WFC")
+        xlf_equiv_bid = 3*bond_bid + 2*gs_bid + 3*ms_bid + 2*wfc_bid
+        xlf_equiv_ask = 3*bond_ask + 2*bond_ask + 3*ms_ask + 3*wfc_ask
+        return xlf_equiv_bid, xlf_equiv_ask
+
+    @staticmethod
+    def sell_xlf_equivalents(market_book, exchange):
+        bond_bid, bond_ask = market_book.best_price_both("BOND")
+        gs_bid, gs_ask = market_book.best_price_both("GS")
+        ms_bid, ms_ask = market_book.best_price_both("MS")
+        wfc_bid, wfc_ask = market_book.best_price_both("WFC")
+        exchange.send_add_message()
 
 
 class Constants:
@@ -135,6 +155,20 @@ def main():
                             "vale_ask_price": vale_ask_price,
                         }
                     )
+            if message["symbol"] == "XLF":
+                # Calculate XLF rates
+                xlf_bid, xlf_ask = market_book.best_price_both("XLF")
+
+                # Calculate market equivalent of XLF
+                xlf_equiv_bid, xlf_equiv_ask = Utils.get_xlf_equivalents(market_book)
+
+                if xlf_bid > xlf_equiv_bid:
+                    # Then sell xlf, buy equivalent, convert after
+                    exchange.send_add_message(Ledger.current_id, "XLF", Dir.SELL, 10, )
+                    exchange.send_add_message(Ledger.current_id, "")
+
+
+
 
 
 
@@ -211,6 +245,7 @@ class ExchangeConnection:
         return s.makefile("rw", 1)
 
     def _write_message(self, message):
+        Ledger.current_id += 1
         json.dump(message, self.exchange_socket)
         self.exchange_socket.write("\n")
 
@@ -280,3 +315,6 @@ class MarketBook:
     def best_price_quant(self, ticker, side):
         if self.market_book[ticker][side]:
             return (self.market_book[side][0][0], self.market_book[side][0][1])
+
+    def best_price_both(self, ticker):
+        return self.best_price_quant(ticker, "buy"), self.best_price_quant(ticker, "sell")
