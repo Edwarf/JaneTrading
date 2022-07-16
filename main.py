@@ -219,6 +219,7 @@ def main():
                 exchange.send_add_message(Ledger.current_id, "VALE", Dir.SELL, ask-1, 1)
 
             if message["symbol"] == "XLF":
+                continue
                 # Calculate XLF rates
                 xlf_bid, xlf_ask = market_book.best_price_both("XLF")
 
