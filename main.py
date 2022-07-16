@@ -271,11 +271,11 @@ def main():
             vale_fair_value = (vale_bid + vale_ask)
             valbz_bid, valbz_ask = market_book.best_price_both("VALBZ")
             valbz_fair_value = (valbz_ask + valbz_bid)
-            if valbz_fair_value - vale_fair_value < 10:
+            if valbz_fair_value - vale_fair_value > 25:
                 exchange.send_add_message(Ledger.current_id, "VALBZ", Dir.SELL, 1, valbz_bid-1)
                 exchange.send_add_message(Ledger.current_id, "VALE", Dir.BUY, 1, vale_ask+1)
                 exchange.send_convert_message(Ledger.current_id, "VALE", Dir.SELL, 1)
-            elif vale_fair_value - valbz_fair_value < 10:
+            elif vale_fair_value - valbz_fair_value > 25:
                 exchange.send_add_message(Ledger.current_id, "VALE", Dir.SELL, 1, vale_bid-1)
                 exchange.send_add_message(Ledger.current_id, "VALBZ", Dir.BUY, 1, valbz_ask+1)
                 exchange.send_convert_message(Ledger.current_id, "VALE", Dir.BUY, 1)
