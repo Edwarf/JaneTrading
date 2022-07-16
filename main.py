@@ -237,12 +237,14 @@ def main():
             break
         elif message["type"] == "ack":
             if message["order_id"] == Ledger.XLFBuy:
+                print("converted buy")
                 Utils.trade_gs_eq(exchange, market_book, 2, Dir.BUY)
                 Utils.trade_ms_eq(exchange, market_book, 3, Dir.BUY)
                 Utils.trade_wfc_eq(exchange, market_book, 2, Dir.BUY)
                 Utils.trade_bond_eq(exchange, market_book, 3, Dir.BUY)
                 Ledger.XLFBuy = None
             if message["order_id"] == Ledger.XLFSell:
+                print("Converted sell")
                 Utils.trade_gs_eq(exchange, market_book, 2, Dir.SELL)
                 Utils.trade_ms_eq(exchange, market_book, 3, Dir.SELL)
                 Utils.trade_wfc_eq(exchange, market_book, 2, Dir.SELL)
