@@ -116,7 +116,16 @@ class Constants:
     REFRESH_TIME = 10
     BIG_ORDER = 30*10*10
 
+class OwnedAssets:
+    assetTable = defaultdict(lambda: 0)
 
+    @staticmethod
+    def updateAssets(symbol, size, dir):
+        if dir == "BUY":
+            OwnedAssets.assetTable[symbol] += size
+        else:
+            OwnedAssets.assetTable[symbol] -= size
+ 
 class Ledger:
     current_id = 0
     assets = defaultdict(lambda: 0)
@@ -212,7 +221,9 @@ def main():
         elif message["type"] == "reject":
             print(message)
         elif message["type"] == "fill":
-            print(message)
+            OwnedAssets.updateAssets(message["symbol"], message["size"], message["dir"])
+            print(OwnedAssets.assetTable)
+            #print(message)
         elif message["type"] == "book":
             market_book.update_book(message)
 
