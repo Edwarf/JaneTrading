@@ -32,6 +32,33 @@ team_name = "WHITETIPSHARKS"
 # before it will start making good trades!
 
 
+class MarketBook:
+    market_book = defaultdict(lambda: {"buy": [], "sell": []})
+
+    def add_to_book(self, trade):
+        print(trade)
+        self.market_book[trade["symbol"]][trade["dir"].lower()].append(
+            [trade["price"], trade["size"]])
+
+    def update_book(self, message):
+        self.market_book[message["symbol"]] = {
+            "buy": message["buy"], "sell": message["sell"]}
+
+    def check_if_offers(self, ticker, side):
+        first, second = self.best_price_quant(ticker, side)
+        return first is not None
+
+    def best_price_quant(self, ticker, side):
+        if self.market_book[ticker][side]:
+            return self.market_book[ticker][side][0][0], self.market_book[ticker][side][0][1]
+        else:
+            if side == "buy":
+                return Constants.BIG_ORDER, Constants.BIG_ORDER
+            else:
+                return 0, 0
+
+    def best_price_both(self, ticker):
+        return self.best_price_quant(ticker, "buy")[0], self.best_price_quant(ticker, "sell")[0]
 class Utils:
     @staticmethod
     def best_price(message, side):
@@ -322,32 +349,6 @@ def parse_arguments():
 
     return args
 
-
-class MarketBook:
-    market_book = defaultdict(lambda: {"buy": [], "sell": []})
-
-    def add_to_book(self, trade):
-        self.market_book[trade["symbol"]][trade["dir"].lower()].append([trade["price"], trade["size"]])
-
-    def update_book(self, message):
-        self.market_book[message["symbol"]] = {
-            "buy": message["buy"], "sell": message["sell"]}
-
-    def check_if_offers(self, ticker, side):
-        first, second = self.best_price_quant(ticker, side)
-        return first is not None
-
-    def best_price_quant(self, ticker, side):
-        if self.market_book[ticker][side]:
-            return self.market_book[ticker][side][0][0], self.market_book[ticker][side][0][1]
-        else:
-            if side == "buy":
-                return Constants.BIG_ORDER, Constants.BIG_ORDER
-            else:
-                return 0, 0
-
-    def best_price_both(self, ticker):
-        return self.best_price_quant(ticker, "buy")[0], self.best_price_quant(ticker, "sell")[0]
 
 if __name__ == "__main__":
     # Check that [team_name] has been updated.
