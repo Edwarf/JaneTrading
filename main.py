@@ -222,7 +222,7 @@ def main():
             print(message)
         elif message["type"] == "fill":
             OwnedAssets.updateAssets(message["symbol"], message["size"], message["dir"])
-            print(OwnedAssets.assetTable)
+            #print(OwnedAssets.assetTable)
             #print(message)
         elif message["type"] == "book":
             market_book.update_book(message)
