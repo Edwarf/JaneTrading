@@ -115,14 +115,14 @@ class Ledger:
     open_orders = defaultdict(lambda: NONE)
     our_book = MarketBook()
 
-    def addOpen(self, message):
+    def addOpen(message):
         self.open_orders[message["order_id"]] = message
 
-    def confirmOrder(self, orderId):
+    def confirmOrder(orderId):
         self.our_book.add_to_book(self.open_orders[orderId])
         del self.open_orders[orderId]
 
-    def failOrder(self, orderId):
+    def failOrder(orderId):
         del self.open_orders[orderId]
 
 def handle_xlf(message):
