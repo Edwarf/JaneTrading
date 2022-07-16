@@ -51,8 +51,6 @@ class Utils:
         xlf_equiv_ask = 3*bond_ask + 2*bond_ask + 3*ms_ask + 2*wfc_ask
         return xlf_equiv_bid, xlf_equiv_ask
 
-#def send_add_message(
-        #self, order_id: int, symbol: str, dir: Dir, price: int, size: int
     @staticmethod
     def sell_xlf_equivalents(market_book, exchange):
         bond_bid, bond_ask = market_book.best_price_both("BOND")
@@ -80,6 +78,7 @@ class Utils:
 
 class Constants:
     WAIT_TIME = 30*10**6
+    BIG_ORDER = 30*10*10
 
 
 class Ledger:
@@ -160,8 +159,6 @@ def main():
                 print(message)
 
             if message["symbol"] == "XLF":
-                if not market_book.check_if_offers("XLF", "buy") or not market_book.check_if_offers("XLF", "sell"):
-                    continue
                 # Calculate XLF rates
                 xlf_bid, xlf_ask = market_book.best_price_both("XLF")
 
@@ -323,6 +320,11 @@ class MarketBook:
     def best_price_quant(self, ticker, side):
         if self.market_book[ticker][side]:
             return self.market_book[ticker][side][0][0], self.market_book[ticker][side][0][1]
+        else:
+            if side == "buy":
+                return Constants.BIG_ORDER, Constants.BIG_ORDER
+            else:
+                return 0, 0
 
     def best_price_both(self, ticker):
         return self.best_price_quant(ticker, "buy")[0], self.best_price_quant(ticker, "sell")[0]
