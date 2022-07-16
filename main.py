@@ -62,6 +62,9 @@ def main():
     # message. Sending a message in response to every exchange message will
     # cause a feedback loop where your bot's messages will quickly be
     # rate-limited and ignored. Please, don't do that!
+    market_book = MarketBook()
+    orderIdNum = 1
+    
     while True:
         message = exchange.read_message()
 
@@ -81,6 +84,18 @@ def main():
         elif message["type"] == "fill":
             print(message)
         elif message["type"] == "book":
+            market_book.update_book(message)
+
+            if message["symbol"] == "BOND":
+                buyInfo = market_book.best_price_quant("BOND", "buy")
+                if buyInfo[0] > 1000:
+                    exchange.send_add_message(
+                        orderIdNum, "BOND", "sell", buyInfo[0], buyInfo[1] // 2)
+                    orderIdNum += 1
+                sellInfo = market_book.best_price_quant("BOND", "sell")
+                if sellInfo[0] < 1000:
+                    exchange.send_add_message(orderIdNum, "BOND", "buy", buyInfo[0], buyInfo[1] // 2)
+
             if message["symbol"] == "VALE":
 
                 def best_price(side):
@@ -241,3 +256,7 @@ class MarketBook:
 
     def update_book(self, message):
         self.market_book[message["symbol"]] = {Dir.BUY: message["buy"], Dir.SELL: message["sell"]}
+
+    def best_price_quant(self, ticker, side):
+        if self.market_book[ticker][side]:
+            return (self.market_book[side][0][0], self.market_book[side][0][1])
