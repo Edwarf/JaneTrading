@@ -216,25 +216,25 @@ def main():
             market_book.update_book(message)
 
         if time.time() - trade_time > Constants.WAIT_TIME:
-            if message["symbol"] == "BOND":
-                continue
-                buyInfo = market_book.best_price_quant("BOND", "buy")
-                if buyInfo is not None and buyInfo[0] < 1000:
-                     exchange.send_add_message(
-                        orderIdNum, "BOND", "BUY", buyInfo[0] + 1, buyInfo[1])
-                     time.sleep(Constants.WAIT_TIME)
-                sellInfo = market_book.best_price_quant("BOND", "sell")
-                if buyInfo is not None and sellInfo[0] > 1000:
-                     exchange.send_add_message(orderIdNum, "BOND", "SELL", buyInfo[0] - 1, buyInfo[1])
-                     time.sleep(Constants.WAIT_TIME)
+            # if message["symbol"] == "BOND":
+            #     continue
+            #     buyInfo = market_book.best_price_quant("BOND", "buy")
+            #     if buyInfo is not None and buyInfo[0] < 1000:
+            #          exchange.send_add_message(
+            #             orderIdNum, "BOND", "BUY", buyInfo[0] + 1, buyInfo[1])
+            #          time.sleep(Constants.WAIT_TIME)
+            #     sellInfo = market_book.best_price_quant("BOND", "sell")
+            #     if buyInfo is not None and sellInfo[0] > 1000:
+            #          exchange.send_add_message(orderIdNum, "BOND", "SELL", buyInfo[0] - 1, buyInfo[1])
+            #          time.sleep(Constants.WAIT_TIME)
 
-            if message["symbol"] == "XLF":
-                # Calculate XLF rates
-                xlf_bid, xlf_ask = market_book.best_price_both("XLF")
-                # Calculate market equivalent of XLF
-                xlf_equiv_bid, xlf_equiv_ask = Utils.get_xlf_equivalents(market_book)
-                # Trade on fair value
-                Utils.trade_fair_value(exchange, "XLF", xlf_bid, xlf_equiv_bid, 1)
+        
+            # Calculate XLF rates
+            xlf_bid, xlf_ask = market_book.best_price_both("XLF")
+            # Calculate market equivalent of XLF
+            xlf_equiv_bid, xlf_equiv_ask = Utils.get_xlf_equivalents(market_book)
+            # Trade on fair value
+            Utils.trade_fair_value(exchange, "XLF", xlf_bid, xlf_equiv_bid, 1)
 
             trade_time = time.time()
 
