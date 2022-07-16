@@ -216,6 +216,7 @@ def main():
             market_book.update_book(message)
 
         if time.time() - trade_time > Constants.WAIT_TIME:
+            print("Trading window")
             # if message["symbol"] == "BOND":
             #     continue
             #     buyInfo = market_book.best_price_quant("BOND", "buy")
