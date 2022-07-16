@@ -181,6 +181,8 @@ def main():
     market_book = MarketBook()
     orderIdNum = 1
     
+    trade_time = 0
+
     while True:
         message = exchange.read_message()
 
@@ -212,6 +214,8 @@ def main():
             print(message)
         elif message["type"] == "book":
             market_book.update_book(message)
+
+        if time.time() - trade_time > Constants.WAIT_TIME:
             if message["symbol"] == "BOND":
                 continue
                 buyInfo = market_book.best_price_quant("BOND", "buy")
@@ -231,6 +235,8 @@ def main():
                 xlf_equiv_bid, xlf_equiv_ask = Utils.get_xlf_equivalents(market_book)
                 # Trade on fair value
                 Utils.trade_fair_value(exchange, "XLF", xlf_bid, xlf_equiv_bid, 1)
+
+            trade_time = time.time()
 
         currentTime = time.time()
         for i, group in enumerate(Ledger.times):
