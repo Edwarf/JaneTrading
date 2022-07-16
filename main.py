@@ -5,8 +5,9 @@
 # 3) Run in loop: while true; do ./bot.py --test prod-like; sleep 1; done
 
 import argparse
-from collections import deque
+from collections import defaultdict, deque
 from enum import Enum
+from re import L
 import time
 import socket
 import json
@@ -25,7 +26,6 @@ team_name = "WHITETIPSHARKS"
 # price, and it prints the current prices for VALE every second. The sample
 # code is intended to be a working example, but it needs some improvement
 # before it will start making good trades!
-
 
 def main():
     args = parse_arguments()
@@ -100,6 +100,9 @@ def main():
                             "vale_ask_price": vale_ask_price,
                         }
                     )
+
+
+
 
 
 # ~~~~~============== PROVIDED CODE ==============~~~~~
@@ -231,3 +234,10 @@ if __name__ == "__main__":
     ), "Please put your team name in the variable [team_name]."
 
     main()
+
+
+class MarketBook:
+    market_book = defaultdict(lambda: {Dir.BUY: [], Dir.SELL: []})
+
+    def update_book(self, message):
+        self.market_book[message["symbol"]] = {Dir.BUY: message["buy"], Dir.SELL: message["sell"]}
