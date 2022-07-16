@@ -36,7 +36,6 @@ class MarketBook:
     market_book = defaultdict(lambda: {"buy": [], "sell": []})
 
     def add_to_book(self, trade):
-        print(trade)
         self.market_book[trade["symbol"]][trade["dir"].lower()].append(
             [trade["price"], trade["size"]])
 
@@ -116,8 +115,8 @@ class Ledger:
     our_book = MarketBook()
 
     @staticmethod
-    def addOpen(message):
-        Ledger.open_orders[message["order_id"]] = message
+    def addOpen(order_id, symbol, dir, price, size):
+        Ledger.open_orders[order_id] = {"symbol": symbol, "dir": dir, "price": price, "size": size}
 
     @staticmethod
     def confirmOrder(orderId):
@@ -260,6 +259,7 @@ class ExchangeConnection:
     def send_add_message(
         self, order_id: int, symbol: str, dir: Dir, price: int, size: int
     ):
+        Ledger.addOpen(order_id, symbol, dir, price, size)
         """Add a new order"""
         self._write_message(
             {
@@ -300,9 +300,7 @@ class ExchangeConnection:
         return s.makefile("rw", 1)
 
     def _write_message(self, message):
-        Ledger.current_id += 1
-        print(message)
-        Ledger.addOpen(message)
+        Ledger.current_id += 1        
         json.dump(message, self.exchange_socket)
         self.exchange_socket.write("\n")
 
