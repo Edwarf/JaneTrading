@@ -272,6 +272,8 @@ def main():
             valbz_bid, valbz_ask = market_book.best_price_both("VALBZ")
             Utils.trade_fair_value(exchange, "VALE", vale_bid, vale_fair_value, 1)
             valbz_fair_value = (valbz_ask + valbz_bid)//2
+            Utils.trade_fair_value(
+                exchange, "VALBZ", vale_bid, valbz_fair_value, 1)
             if valbz_fair_value - vale_fair_value > 12:
                 exchange.send_convert_message(Ledger.current_id, "VALE", Dir.SELL, 1)
             elif vale_fair_value - valbz_fair_value > 12:
