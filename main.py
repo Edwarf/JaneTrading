@@ -220,12 +220,9 @@ def main():
             print('TRADING WINDOW')
 
             ### XLF TRADING ALGORITHM
-            # Calculate XLF rates
-            #xlf_bid, xlf_ask = market_book.best_price_both("XLF")
-            # Calculate market equivalent of XLF
-            #xlf_equiv_bid, xlf_equiv_ask = Utils.get_xlf_equivalents(market_book)
-            # Trade on fair value
-            #Utils.trade_fair_value(exchange, "XLF", xlf_bid, xlf_equiv_bid, 1)
+            xlf_bid, xlf_ask = market_book.best_price_both("XLF")
+            xlf_equiv_bid, xlf_equiv_ask = Utils.get_xlf_equivalents(market_book)
+            Utils.trade_fair_value(exchange, "XLF", xlf_bid, xlf_equiv_bid, 1)
 
             ### BOND TRADING ALGORITHM
 
