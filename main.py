@@ -217,8 +217,6 @@ def main():
             market_book.update_book(message)
 
         if (time.time() - trade_time) > Constants.WAIT_TIME:
-            print('TRADING WINDOW')
-
             ### XLF TRADING ALGORITHM
             #xlf_bid, xlf_ask = market_book.best_price_both("XLF")
             #xlf_equiv_bid, xlf_equiv_ask = Utils.get_xlf_equivalents(market_book)
@@ -249,6 +247,7 @@ def main():
             trade_time = time.time()
 
             currentTime = time.time()
+            print(len(Ledger.times))
             for i, group in enumerate(Ledger.times):
                 if currentTime - group[1] > 10 and group[0] in Ledger.open_orders:
                     print("Kill", group[1])
