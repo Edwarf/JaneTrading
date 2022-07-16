@@ -34,17 +34,24 @@ class Utils:
         if message[side]:
             return message[side][0][0]
 
+    @staticmethod
+    def bid_ask_info(message):
+        return Utils.best_price(message, "buy"), Utils.best_price(message, "sell")
+
 
 class Constants:
     WAIT_TIME = 30*10**6
 
 
 class Ledger:
-    orders = defaultdict(lambda: "")
+    current_id = 0
     assets = defaultdict(lambda: 0)
 
-def handle_xlf(book, ledger):
-    pass
+
+def handle_xlf(message):
+    bid_price, ask_price = Utils.bid_ask_info(message)
+
+
 
 
 def main():
@@ -101,16 +108,11 @@ def main():
         elif message["type"] == "reject":
             print(message)
         elif message["type"] == "fill":
-
             print(message)
         elif message["type"] == "book":
             if message["symbol"] == "VALE":
 
-
-
-                vale_bid_price = best_price("buy")
-                vale_ask_price = best_price("sell")
-
+                vale_bid_price, vale_ask_price = Utils.bid_ask_info("buy")
                 now = time.time()
 
                 if now > vale_last_print_time + 1:
