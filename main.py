@@ -15,7 +15,6 @@ import time
 import socket
 import json
 
-
 # ~~~~~============== CONFIGURATION  ==============~~~~~
 # Replace "REPLACEME" with your team name!
 team_name = "WHITETIPSHARKS"
@@ -120,11 +119,13 @@ class Constants:
 class Ledger:
     current_id = 0
     assets = defaultdict(lambda: 0)
-    pending_orders = defaultdict(lambda: None)
-    open_orders = defaultdict(lambda: None)
+    pending_orders = defaultdict(lambda: NONE)
+    open_orders = defaultdict(lambda: NONE)
+    times = []
 
     @staticmethod
     def addOpen(order_id, symbol, dir, price, size):
+        Ledger.times.append([order_id, time.time()])
         Ledger.pending_orders[order_id] = {"symbol": symbol, "dir": dir, "price": price, "size": size}
 
     @staticmethod
@@ -137,7 +138,7 @@ class Ledger:
         del Ledger.pending_orders[orderId]
     
     @staticmethod
-    def outOrder(orderId, amnt):
+    def outOrder(orderId):
         del Ledger.open_orders[orderId]
 
 
@@ -211,6 +212,18 @@ def main():
             print(message)
         elif message["type"] == "book":
             market_book.update_book(message)
+            if message["symbol"] == "BOND":
+                continue
+                buyInfo = market_book.best_price_quant("BOND", "buy")
+                if buyInfo is not None and buyInfo[0] < 1000:
+                     exchange.send_add_message(
+                        orderIdNum, "BOND", "BUY", buyInfo[0] + 1, buyInfo[1])
+                     time.sleep(Constants.WAIT_TIME)
+                sellInfo = market_book.best_price_quant("BOND", "sell")
+                if buyInfo is not None and sellInfo[0] > 1000:
+                     exchange.send_add_message(orderIdNum, "BOND", "SELL", buyInfo[0] - 1, buyInfo[1])
+                     time.sleep(Constants.WAIT_TIME)
+
             if message["symbol"] == "XLF":
                 # Calculate XLF rates
                 xlf_bid, xlf_ask = market_book.best_price_both("XLF")
@@ -219,6 +232,15 @@ def main():
                 # Trade on fair value
                 Utils.trade_fair_value(exchange, "XLF", xlf_bid, xlf_equiv_bid, 1)
 
+        currentTime = time.time()
+        for i, group in enumerate(Ledger.times):
+            if group[1] - currentTime > 10 and group[0] in Ledger.open_orders:
+                print("Kill", group[1])
+                exchange.send_cancel_message(group[0])
+
+            if group[1] - currentTime < 10:
+                Ledger.times = Ledger.times[i:]
+                break
 
 
 
