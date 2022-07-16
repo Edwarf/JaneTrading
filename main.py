@@ -308,11 +308,11 @@ def main():
 
             currentTime = time.time()
             for i, group in enumerate(Ledger.times):
-                if currentTime - group[1] > 10 and group[0] in Ledger.open_orders:
+                if currentTime - group[1] > 5 and group[0] in Ledger.open_orders:
                     print("Kill", group[1])
                     exchange.send_cancel_message(group[0])
 
-                if currentTime - group[1] < 10:
+                if currentTime - group[1] < 5:
                     Ledger.times = Ledger.times[i:]
                     break
             #print(len(Ledger.times))
