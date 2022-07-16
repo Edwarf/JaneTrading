@@ -178,7 +178,6 @@ def main():
     # Set up some variables to track the bid and ask price of a symbol. Right
     # now this doesn't track much information, but it's enough to get a sense
     # of the VALE market.
-    vale_bid_price, vale_ask_price = None, None
     vale_last_print_time = time.time()
 
 
@@ -249,7 +248,7 @@ def main():
             vale_bid, vale_ask = market_book.best_price_both("VALE")
             valbz_bid, valbz_ask = market_book.best_price_both("VALBZ")
             Utils.trade_fair_value(exchange, "VALE", vale_bid, valbz_bid, 1)
-            Utils.trade_fair_value(exchange, "VALE", vale_ask, vale_ask_price, 1)
+            Utils.trade_fair_value(exchange, "VALE", vale_ask, valbz_ask, 1)
 
 
 
