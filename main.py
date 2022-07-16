@@ -115,15 +115,18 @@ class Ledger:
     open_orders = defaultdict(lambda: NONE)
     our_book = MarketBook()
 
+    @staticmethod
     def addOpen(message):
-        self.open_orders[message["order_id"]] = message
+        Ledger.open_orders[message["order_id"]] = message
 
+    @staticmethod
     def confirmOrder(orderId):
-        self.our_book.add_to_book(self.open_orders[orderId])
-        del self.open_orders[orderId]
+        Ledger.our_book.add_to_book(Ledger.open_orders[orderId])
+        del Ledger.open_orders[orderId]
 
+    @staticmethod
     def failOrder(orderId):
-        del self.open_orders[orderId]
+        del Ledger.open_orders[orderId]
 
 def handle_xlf(message):
     bid_price, ask_price = Utils.bid_ask_info(message)
