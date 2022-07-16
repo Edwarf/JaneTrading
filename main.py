@@ -49,7 +49,7 @@ class Utils:
         ms_bid, ms_ask = market_book.best_price_both("MS")
         wfc_bid, wfc_ask = market_book.best_price_both("WFC")
         xlf_equiv_bid = 3*bond_bid + 2*gs_bid + 3*ms_bid + 2*wfc_bid
-        xlf_equiv_ask = 3*bond_ask + 2*bond_ask + 3*ms_ask + 3*wfc_ask
+        xlf_equiv_ask = 3*bond_ask + 2*bond_ask + 3*ms_ask + 2*wfc_ask
         return xlf_equiv_bid, xlf_equiv_ask
 
     @staticmethod
@@ -58,11 +58,28 @@ class Utils:
         gs_bid, gs_ask = market_book.best_price_both("GS")
         ms_bid, ms_ask = market_book.best_price_both("MS")
         wfc_bid, wfc_ask = market_book.best_price_both("WFC")
-        exchange.send_add_message()
+        exchange.send_add_message(Ledger.current_id, "BOND", Dir.SELL, bond_bid, 3)
+        exchange.send_add_message(Ledger.current_id, "GS", Dir.SELL, gs_bid, 2)
+        exchange.send_add_message(Ledger.current_id, "MS", Dir.SELL, ms_bid, 3)
+        exchange.send_add_message(Ledger.current_id, "WFC", Dir.SELL, wfc_bid, 2)
+
+    @staticmethod
+    def buy_xlf_equivalents(market_book, exchange):
+        bond_bid, bond_ask = market_book.best_price_both("BOND")
+        gs_bid, gs_ask = market_book.best_price_both("GS")
+        ms_bid, ms_ask = market_book.best_price_both("MS")
+        wfc_bid, wfc_ask = market_book.best_price_both("WFC")
+        exchange.send_add_message(Ledger.current_id, "BOND", Dir.BUY, bond_ask, 3)
+        exchange.send_add_message(Ledger.current_id, "GS", Dir.BUY, gs_ask, 2)
+        exchange.send_add_message(Ledger.current_id, "MS", Dir.BUY, ms_ask, 3)
+        exchange.send_add_message(Ledger.current_id, "WFC", Dir.BUY, wfc_ask, 2)
+
+
 
 
 class Constants:
     WAIT_TIME = 30*10**6
+    BIG_ORDER = 30*10*10
 
 
 class Ledger:
@@ -144,29 +161,19 @@ def main():
         elif message["type"] == "book":
             market_book.update_book(message)
 
-            if message["symbol"] == "BOND":
-                buyInfo = market_book.best_price_quant("BOND", "buy")
-                if buyInfo is not None and buyInfo[0] < 1000:
-                    exchange.send_add_message(
-                        orderIdNum, "BOND", "BUY", buyInfo[0] + 1, buyInfo[1])
-                    orderIdNum += 1
-                sellInfo = market_book.best_price_quant("BOND", "sell")
-                if buyInfo is not None and sellInfo[0] > 1000:
-                    exchange.send_add_message(orderIdNum, "BOND", "SELL", buyInfo[0] - 1, buyInfo[1])
+            #if message["symbol"] == "BOND":
+            #    buyInfo = market_book.best_price_quant("BOND", "buy")
+            #    if buyInfo is not None and buyInfo[0] < 1000:
+            #        exchange.send_add_message(
+            #            orderIdNum, "BOND", "BUY", buyInfo[0] + 1, buyInfo[1])
+            #        orderIdNum += 1
+            #    sellInfo = market_book.best_price_quant("BOND", "sell")
+            #    if buyInfo is not None and sellInfo[0] > 1000:
+            #        exchange.send_add_message(orderIdNum, "BOND", "SELL", buyInfo[0] - 1, buyInfo[1])
 
             if message["symbol"] == "VALE":
+                print(message)
 
-                vale_bid_price, vale_ask_price = Utils.bid_ask_info("buy")
-                now = time.time()
-
-                if now > vale_last_print_time + 1:
-                    vale_last_print_time = now
-                    print(
-                        {
-                            "vale_bid_price": vale_bid_price,
-                            "vale_ask_price": vale_ask_price,
-                        }
-                    )
             if message["symbol"] == "XLF":
                 # Calculate XLF rates
                 xlf_bid, xlf_ask = market_book.best_price_both("XLF")
@@ -176,8 +183,14 @@ def main():
 
                 if xlf_bid > xlf_equiv_bid:
                     # Then sell xlf, buy equivalent, convert after
-                    exchange.send_add_message(Ledger.current_id, "XLF", Dir.SELL, 10, )
-                    exchange.send_add_message(Ledger.current_id, "")
+                    exchange.send_add_message(Ledger.current_id, "XLF", Dir.SELL, xlf_bid, 10)
+                    Utils.buy_xlf_equivalents(market_book, exchange)
+                elif xlf_bid < xlf_equiv_bid:
+                    exchange.send_add_message(Ledger.current_id, "XLF", Dir.BUY, xlf_ask, 10)
+                    Utils.sell_xlf_equivalents(market_book, exchange)
+
+
+
 
 
 
@@ -320,9 +333,21 @@ class MarketBook:
         self.market_book[message["symbol"]] = {
             "buy": message["buy"], "sell": message["sell"]}
 
+    def check_if_offers(self, ticker, side):
+        first, second = self.best_price_quant(ticker, side)
+        return first is not None
+
     def best_price_quant(self, ticker, side):
         if self.market_book[ticker][side]:
-            return (self.market_book[ticker][side][0][0], self.market_book[ticker][side][0][1])
+            return self.market_book[ticker][side][0][0], self.market_book[ticker][side][0][1]
+        else:
+            if side == "buy":
+                return Constants.BIG_ORDER, Constants.BIG_ORDER
+            else:
+                return 0, 0
+
+    def best_price_both(self, ticker):
+        return self.best_price_quant(ticker, "buy")[0], self.best_price_quant(ticker, "sell")[0]
 
 if __name__ == "__main__":
     # Check that [team_name] has been updated.
@@ -332,12 +357,4 @@ if __name__ == "__main__":
 
     main()
 
-
-
-    def best_price_quant(self, ticker, side):
-        if self.market_book[ticker][side]:
-            return (self.market_book[side][0][0], self.market_book[side][0][1])
-
-    def best_price_both(self, ticker):
-        return self.best_price_quant(ticker, "buy"), self.best_price_quant(ticker, "sell")
 
