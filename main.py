@@ -101,6 +101,16 @@ class Utils:
         exchange.send_add_message(Ledger.current_id, "MS", Dir.BUY, ms_ask, 3)
         exchange.send_add_message(Ledger.current_id, "WFC", Dir.BUY, wfc_ask, 2)
 
+    @staticmethod
+    def trade_fair_value(exchange, ticker, price, fair_value, volume):
+        if price > fair_value:
+            exchange.send_add_message(Ledger.current_id, ticker, Dir.SELL, price, volume)
+            exchange.send_add_message(Ledger.current_id, ticker, Dir.BUY, fair_value, volume)
+        elif price < fair_value:
+            exchange.send_add_message(Ledger.current_id, ticker, Dir.BUY, price, volume)
+            exchange.send_add_message(Ledger.current_id, ticker, Dir.SELL, fair_value, volume)
+
+
 
 class Constants:
     WAIT_TIME = 1
@@ -110,8 +120,8 @@ class Constants:
 class Ledger:
     current_id = 0
     assets = defaultdict(lambda: 0)
-    pending_orders = defaultdict(lambda: NONE)
-    open_orders = defaultdict(lambda: NONE)
+    pending_orders = defaultdict(lambda: None)
+    open_orders = defaultdict(lambda: None)
 
     @staticmethod
     def addOpen(order_id, symbol, dir, price, size):
@@ -129,9 +139,6 @@ class Ledger:
     @staticmethod
     def outOrder(orderId, amnt):
         del Ledger.open_orders[orderId]
-
-def handle_xlf(message):
-    bid_price, ask_price = Utils.bid_ask_info(message)
 
 
 def main():
@@ -182,6 +189,12 @@ def main():
         # message because it can be a lot of information to read. Instead, let
         # your code handle the messages and just print the information
         # important for you!
+
+        # Guaranteed Actions
+
+        exchange.send_add_message(Ledger.current_id, "BOND", Dir.BUY, 999, 1)
+        exchange.send_add_message(Ledger.current_id, "BOND", Dir.SELL, 1001, 1)
+
         if message["type"] == "close":
             print("The round has ended")
             break
@@ -198,44 +211,13 @@ def main():
             print(message)
         elif message["type"] == "book":
             market_book.update_book(message)
-
-            if message["symbol"] == "BOND":
-                continue
-                buyInfo = market_book.best_price_quant("BOND", "buy")
-                if buyInfo is not None and buyInfo[0] < 1000:
-                     exchange.send_add_message(
-                        orderIdNum, "BOND", "BUY", buyInfo[0] + 1, buyInfo[1])
-                     time.sleep(Constants.WAIT_TIME)
-                sellInfo = market_book.best_price_quant("BOND", "sell")
-                if buyInfo is not None and sellInfo[0] > 1000:
-                     exchange.send_add_message(orderIdNum, "BOND", "SELL", buyInfo[0] - 1, buyInfo[1])
-                     time.sleep(Constants.WAIT_TIME)
-
-            if message["symbol"] == "BOND":
-                continue
-                # We'll implement a pennying algorithm for VALE
-                if not(market_book.check_if_offers("VALUE", "buy") and market_book.check_if_offers("VALE", "sell")):
-                    continue
-                bid, ask = market_book.best_price_both("VALE")
-                # Beat both by 1
-                exchange.send_add_message(Ledger.current_id, "VALE", Dir.BUY, bid+1, 1)
-                exchange.send_add_message(Ledger.current_id, "VALE", Dir.SELL, ask-1, 1)
-
             if message["symbol"] == "XLF":
                 # Calculate XLF rates
                 xlf_bid, xlf_ask = market_book.best_price_both("XLF")
-
                 # Calculate market equivalent of XLF
                 xlf_equiv_bid, xlf_equiv_ask = Utils.get_xlf_equivalents(market_book)
-
-                if xlf_bid > xlf_equiv_bid:
-                    # Then sell xlf, buy equivalent, convert after
-                    exchange.send_add_message(Ledger.current_id, "XLF", Dir.SELL, xlf_bid, 2)
-                elif xlf_bid < xlf_equiv_bid:
-                    exchange.send_add_message(Ledger.current_id, "XLF", Dir.BUY, xlf_ask, 2)
-
-            time.sleep(Constants.WAIT_TIME)
-
+                # Trade on fair value
+                Utils.trade_fair_value(exchange, "XLF", xlf_bid, xlf_equiv_bid, 1)
 
 
 
