@@ -5,8 +5,10 @@
 # 3) Run in loop: while true; do ./bot.py --test prod-like; sleep 1; done
 
 import argparse
-from collections import deque, defaultdict
+from collections import defaultdict, deque
+
 from enum import Enum
+from re import L
 import time
 import socket
 import json
@@ -26,7 +28,6 @@ team_name = "WHITETIPSHARKS"
 # price, and it prints the current prices for VALE every second. The sample
 # code is intended to be a working example, but it needs some improvement
 # before it will start making good trades!
-
 
 class Utils:
     @staticmethod
@@ -50,9 +51,6 @@ class Ledger:
 
 def handle_xlf(message):
     bid_price, ask_price = Utils.bid_ask_info(message)
-
-
-
 
 def main():
     args = parse_arguments()
@@ -90,7 +88,9 @@ def main():
     # message. Sending a message in response to every exchange message will
     # cause a feedback loop where your bot's messages will quickly be
     # rate-limited and ignored. Please, don't do that!
-
+    market_book = MarketBook()
+    orderIdNum = 1
+    
     while True:
         message = exchange.read_message()
 
@@ -110,6 +110,18 @@ def main():
         elif message["type"] == "fill":
             print(message)
         elif message["type"] == "book":
+            market_book.update_book(message)
+
+            if message["symbol"] == "BOND":
+                buyInfo = market_book.best_price_quant("BOND", "buy")
+                if buyInfo[0] > 1000:
+                    exchange.send_add_message(
+                        orderIdNum, "BOND", "sell", buyInfo[0], buyInfo[1] // 2)
+                    orderIdNum += 1
+                sellInfo = market_book.best_price_quant("BOND", "sell")
+                if sellInfo[0] < 1000:
+                    exchange.send_add_message(orderIdNum, "BOND", "buy", buyInfo[0], buyInfo[1] // 2)
+
             if message["symbol"] == "VALE":
 
                 vale_bid_price, vale_ask_price = Utils.bid_ask_info("buy")
@@ -123,6 +135,9 @@ def main():
                             "vale_ask_price": vale_ask_price,
                         }
                     )
+
+
+
 
 
 # ~~~~~============== PROVIDED CODE ==============~~~~~
@@ -254,3 +269,14 @@ if __name__ == "__main__":
     ), "Please put your team name in the variable [team_name]."
 
     main()
+
+
+class MarketBook:
+    market_book = defaultdict(lambda: {Dir.BUY: [], Dir.SELL: []})
+
+    def update_book(self, message):
+        self.market_book[message["symbol"]] = {Dir.BUY: message["buy"], Dir.SELL: message["sell"]}
+
+    def best_price_quant(self, ticker, side):
+        if self.market_book[ticker][side]:
+            return (self.market_book[side][0][0], self.market_book[side][0][1])
