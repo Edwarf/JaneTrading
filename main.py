@@ -231,6 +231,8 @@ def main():
             Utils.trade_fair_value(exchange, "BOND", bond_bid, bond_fair_value, 1)
             Utils.trade_fair_value(exchange, "BOND", bond_ask, bond_fair_value, 1)
 
+            ###
+
 
 
 
