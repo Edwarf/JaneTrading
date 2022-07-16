@@ -247,7 +247,6 @@ def main():
             trade_time = time.time()
 
             currentTime = time.time()
-            print(len(Ledger.times))
             for i, group in enumerate(Ledger.times):
                 if currentTime - group[1] > 10 and group[0] in Ledger.open_orders:
                     print("Kill", group[1])
@@ -256,6 +255,7 @@ def main():
                 if currentTime - group[1] < 10:
                     Ledger.times = Ledger.times[i:]
                     break
+            print(len(Ledger.times))
 
 
 
