@@ -229,10 +229,9 @@ def main():
                 if xlf_bid > xlf_equiv_bid:
                     # Then sell xlf, buy equivalent, convert after
                     exchange.send_add_message(Ledger.current_id, "XLF", Dir.SELL, xlf_bid, 10)
-                    Utils.buy_xlf_equivalents(market_book, exchange)
                 elif xlf_bid < xlf_equiv_bid:
                     exchange.send_add_message(Ledger.current_id, "XLF", Dir.BUY, xlf_ask, 10)
-                    Utils.sell_xlf_equivalents(market_book, exchange)
+
             time.sleep(Constants.WAIT_TIME)
 
 
