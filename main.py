@@ -109,23 +109,40 @@ class Utils:
             exchange.send_add_message(Ledger.current_id, ticker, Dir.BUY, price, volume)
             exchange.send_add_message(Ledger.current_id, ticker, Dir.SELL, fair_value, volume)
 
+    @staticmethod
+    def trade_fair_value_capped(exchange, ticker, price, fair_value, volume, LIQUIDITY_CAP):
+        if price > fair_value:
+            if -OwnedAssets.assetTable[ticker] < LIQUIDITY_CAP:
+                exchange.send_add_message(Ledger.current_id, ticker, Dir.SELL, price, volume)
+            if OwnedAssets.assetTable[ticker] < LIQUIDITY_CAP:
+                exchange.send_add_message(Ledger.current_id, ticker, Dir.BUY, fair_value, volume)
+        if price < fair_value:
+            if OwnedAssets.assetTable[ticker] < LIQUIDITY_CAP:
+                exchange.send_add_message(Ledger.current_id, ticker, Dir.BUY, price, volume)
+            if -OwnedAssets.assetTable[ticker] < LIQUIDITY_CAP:
+                exchange.send_add_message(Ledger.current_id, ticker, Dir.SELL, fair_value, volume)
 
 
 class Constants:
     WAIT_TIME = .25
     REFRESH_TIME = 10
     BIG_ORDER = 30*10*10
+    LIQUIDITY_CAP = 30
 
-# class OwnedAssets:
-#     assetTable = defaultdict(lambda: 0)
-#
-#     @staticmethod
-#     def updateAssets(symbol, size, dir):
-#         if dir == "BUY":
-#             OwnedAssets.assetTable[symbol] += size
-#         else:
-#             OwnedAssets.assetTable[symbol] -= size
- 
+
+
+
+class OwnedAssets:
+    assetTable = defaultdict(lambda: 0)
+
+    @staticmethod
+    def updateAssets(symbol, size, dir):
+        if dir == "BUY":
+            OwnedAssets.assetTable[symbol] += size
+        else:
+            OwnedAssets.assetTable[symbol] -= size
+
+
 class Ledger:
     current_id = 0
     assets = defaultdict(lambda: 0)
@@ -220,9 +237,7 @@ def main():
         elif message["type"] == "reject":
             print(message)
         elif message["type"] == "fill":
-            #OwnedAssets.updateAssets(message["symbol"], message["size"], message["dir"])
-            #print(OwnedAssets.assetTable)
-            print(message)
+            OwnedAssets.updateAssets(message["symbol"], message["size"], message["dir"])
         elif message["type"] == "book":
             market_book.update_book(message)
 
@@ -230,8 +245,8 @@ def main():
             ### XLF TRADING ALGORITHM
             xlf_bid, xlf_ask = market_book.best_price_both("XLF")
             xlf_equiv_bid, xlf_equiv_ask = Utils.get_xlf_equivalents(market_book)
-            Utils.trade_fair_value(exchange, "XLF", xlf_bid, xlf_equiv_bid, 1)
-            Utils.trade_fair_value(exchange, "XLF", xlf_ask, xlf_equiv_ask, 1)
+            Utils.trade_fair_value_capped(exchange, "XLF", xlf_bid, xlf_equiv_bid, 1, 50)
+            Utils.trade_fair_value_capped(exchange, "XLF", xlf_ask, xlf_equiv_ask, 1, 50)
 
 
             ### BOND TRADING ALGORITHM
