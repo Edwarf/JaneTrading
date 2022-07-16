@@ -124,8 +124,8 @@ class Utils:
 
 
 class Constants:
-    WAIT_TIME = .15
-    REFRESH_TIME = 10
+    WAIT_TIME = .25
+    REFRESH_TIME = 8
     BIG_ORDER = 30*10*10
     LIQUIDITY_CAP = 30
 
