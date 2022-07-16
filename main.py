@@ -250,8 +250,9 @@ class MarketBook:
             Dir.BUY: message["buy"], Dir.SELL: message["sell"]}
 
     def best_price_quant(self, ticker, side):
+        print(self.market_book, ticker, side)
         if self.market_book[ticker][side]:
-            return (self.market_book[side][0][0], self.market_book[side][0][1])
+            return (self.market_book[ticker][side][0][0], self.market_book[ticker][side][0][1])
 
 if __name__ == "__main__":
     # Check that [team_name] has been updated.
