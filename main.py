@@ -135,11 +135,17 @@ class Ledger:
 
     @staticmethod
     def failOrder(orderId):
-        del Ledger.pending_orders[orderId]
+        try:
+            del Ledger.pending_orders[orderId]
+        except:
+            print("Del order", orderId, "Failed")
     
     @staticmethod
     def outOrder(orderId):
-        del Ledger.open_orders[orderId]
+        try:
+            del Ledger.open_orders[orderId]
+        except:
+            print("Out order", orderId, "Failed")
 
 
 def main():
