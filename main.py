@@ -134,13 +134,13 @@ def main():
 
             if message["symbol"] == "BOND":
                 buyInfo = market_book.best_price_quant("BOND", "buy")
-                if buyInfo[0] > 1000:
+                if buyInfo is not None and buyInfo[0] < 1000:
                     exchange.send_add_message(
-                        orderIdNum, "BOND", "sell", buyInfo[0], buyInfo[1] // 2)
+                        orderIdNum, "BOND", "BUY", buyInfo[0] + 1, buyInfo[1])
                     orderIdNum += 1
                 sellInfo = market_book.best_price_quant("BOND", "sell")
-                if sellInfo[0] < 1000:
-                    exchange.send_add_message(orderIdNum, "BOND", "buy", buyInfo[0], buyInfo[1] // 2)
+                if buyInfo is not None and sellInfo[0] > 1000:
+                    exchange.send_add_message(orderIdNum, "BOND", "SELL", buyInfo[0] - 1, buyInfo[1])
 
             if message["symbol"] == "VALE":
 
@@ -297,6 +297,17 @@ def parse_arguments():
     return args
 
 
+class MarketBook:
+    market_book = defaultdict(lambda: {"buy": [], "sell": []})
+
+    def update_book(self, message):
+        self.market_book[message["symbol"]] = {
+            "buy": message["buy"], "sell": message["sell"]}
+
+    def best_price_quant(self, ticker, side):
+        if self.market_book[ticker][side]:
+            return (self.market_book[ticker][side][0][0], self.market_book[ticker][side][0][1])
+
 if __name__ == "__main__":
     # Check that [team_name] has been updated.
     assert (
@@ -306,11 +317,6 @@ if __name__ == "__main__":
     main()
 
 
-class MarketBook:
-    market_book = defaultdict(lambda: {Dir.BUY: [], Dir.SELL: []})
-
-    def update_book(self, message):
-        self.market_book[message["symbol"]] = {Dir.BUY: message["buy"], Dir.SELL: message["sell"]}
 
     def best_price_quant(self, ticker, side):
         if self.market_book[ticker][side]:
@@ -318,3 +324,4 @@ class MarketBook:
 
     def best_price_both(self, ticker):
         return self.best_price_quant(ticker, "buy"), self.best_price_quant(ticker, "sell")
+
