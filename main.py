@@ -132,12 +132,28 @@ class Utils:
             exchange.send_add_message(Ledger.current_id, ticker, Dir.BUY, price, volume)
             exchange.send_add_message(Ledger.current_id, ticker, Dir.SELL, fair_value, volume)
 
+    @staticmethod
+    def trade_fair_value_capped(exchange, ticker, price, fair_value, volume, LIQUIDITY_CAP):
+        if price > fair_value:
+            if -OwnedAssets.assetTable[ticker] < LIQUIDITY_CAP:
+                exchange.send_add_message(Ledger.current_id, ticker, Dir.SELL, price, volume)
+            if OwnedAssets.assetTable[ticker] < LIQUIDITY_CAP:
+                exchange.send_add_message(Ledger.current_id, ticker, Dir.BUY, fair_value, volume)
+        if price < fair_value:
+            if OwnedAssets.assetTable[ticker] < LIQUIDITY_CAP:
+                exchange.send_add_message(Ledger.current_id, ticker, Dir.BUY, price, volume)
+            if -OwnedAssets.assetTable[ticker] < LIQUIDITY_CAP:
+                exchange.send_add_message(Ledger.current_id, ticker, Dir.SELL, fair_value, volume)
 
 
 class Constants:
     WAIT_TIME = .25
-    REFRESH_TIME = 10
+    REFRESH_TIME = 8
     BIG_ORDER = 30*10*10
+    LIQUIDITY_CAP = 30
+
+
+
 
 class OwnedAssets:
     assetTable = defaultdict(lambda: 0)
@@ -148,7 +164,8 @@ class OwnedAssets:
             OwnedAssets.assetTable[symbol] += size
         else:
             OwnedAssets.assetTable[symbol] -= size
- 
+
+
 class Ledger:
     current_id = 0
     assets = defaultdict(lambda: 0)
@@ -265,8 +282,6 @@ def main():
             #print(message)
         elif message["type"] == "fill":
             OwnedAssets.updateAssets(message["symbol"], message["size"], message["dir"])
-            #print(OwnedAssets.assetTable)
-            #print(message)
         elif message["type"] == "book":
             market_book.update_book(message)
 
@@ -308,11 +323,11 @@ def main():
 
             currentTime = time.time()
             for i, group in enumerate(Ledger.times):
-                if currentTime - group[1] > 5 and group[0] in Ledger.open_orders:
+                if currentTime - group[1] > Constants.REFRESH_TIME and group[0] in Ledger.open_orders:
                     print("Kill", group[1])
                     exchange.send_cancel_message(group[0])
 
-                if currentTime - group[1] < 5:
+                if currentTime - group[1] < Constants.REFRESH_TIME:
                     Ledger.times = Ledger.times[i:]
                     break
             #print(len(Ledger.times))
@@ -468,3 +483,4 @@ if __name__ == "__main__":
 #     if buyInfo is not None and sellInfo[0] > 1000:
 #          exchange.send_add_message(orderIdNum, "BOND", "SELL", buyInfo[0] - 1, buyInfo[1])
 #          time.sleep(Constants.WAIT_TIME)
+ 
