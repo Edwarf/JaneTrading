@@ -125,12 +125,12 @@ class Ledger:
 
     @staticmethod
     def addOpen(order_id, symbol, dir, price, size):
-        Ledger.times.append([order_id, time.time()])
         Ledger.pending_orders[order_id] = {"symbol": symbol, "dir": dir, "price": price, "size": size}
 
     @staticmethod
     def confirmOrder(orderId):
         Ledger.open_orders[orderId] = Ledger.pending_orders[orderId]
+        Ledger.times.append([orderId, time.time()])
         del Ledger.pending_orders[orderId]
 
     @staticmethod
@@ -238,15 +238,15 @@ def main():
 
             trade_time = time.time()
 
-        currentTime = time.time()
-        for i, group in enumerate(Ledger.times):
-            if group[1] - currentTime > 10 and group[0] in Ledger.open_orders:
-                print("Kill", group[1])
-                exchange.send_cancel_message(group[0])
+            currentTime = time.time()
+            for i, group in enumerate(Ledger.times):
+                if currentTime - group[1] > 10 and group[0] in Ledger.open_orders:
+                    print("Kill", group[1])
+                    exchange.send_cancel_message(group[0])
 
-            if group[1] - currentTime < 10:
-                Ledger.times = Ledger.times[i:]
-                break
+                if currentTime - group[1] < 10:
+                    Ledger.times = Ledger.times[i:]
+                    break
 
 
 
