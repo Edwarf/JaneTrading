@@ -229,9 +229,11 @@ def main():
 
             ### BOND TRADING ALGORITHM
 
-            bond_bid, _ = market_book.best_price_both("BOND")
+            bond_bid, bond_ask = market_book.best_price_both("BOND")
             bond_fair_value = 1000
             Utils.trade_fair_value(exchange, "BOND", bond_bid, bond_fair_value, 1)
+            Utils.trade_fair_value(exchange, "BOND", bond_ask, bond_fair_value, 1)
+
 
 
 
