@@ -270,15 +270,12 @@ def main():
             vale_bid, vale_ask = market_book.best_price_both("VALE")
             vale_fair_value = (vale_bid + vale_ask)//2
             valbz_bid, valbz_ask = market_book.best_price_both("VALBZ")
+            Utils.trade_fair_value(exchange, "VALE", vale_bid, vale_fair_value, 1)
             valbz_fair_value = (valbz_ask + valbz_bid)//2
             if valbz_fair_value - vale_fair_value > 12:
-                exchange.send_add_message(Ledger.current_id, "VALBZ", Dir.SELL, valbz_bid-1, 1)
-                exchange.send_add_message(Ledger.current_id, "VALE", Dir.BUY, vale_ask+1, 1)
-                #exchange.send_convert_message(Ledger.current_id, "VALE", Dir.SELL, 1)
+                exchange.send_convert_message(Ledger.current_id, "VALE", Dir.SELL, 1)
             elif vale_fair_value - valbz_fair_value > 12:
-                exchange.send_add_message(Ledger.current_id, "VALE", Dir.SELL, vale_bid-1, 1)
-                exchange.send_add_message(Ledger.current_id, "VALBZ", Dir.BUY, valbz_ask+1, 1)
-                #exchange.send_convert_message(Ledger.current_id, "VALE", Dir.BUY, 1)
+                exchange.send_convert_message(Ledger.current_id, "VALE", Dir.BUY, 1)
 
 
 
