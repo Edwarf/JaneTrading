@@ -15,7 +15,6 @@ import time
 import socket
 import json
 
-
 # ~~~~~============== CONFIGURATION  ==============~~~~~
 # Replace "REPLACEME" with your team name!
 team_name = "WHITETIPSHARKS"
@@ -112,9 +111,11 @@ class Ledger:
     assets = defaultdict(lambda: 0)
     pending_orders = defaultdict(lambda: NONE)
     open_orders = defaultdict(lambda: NONE)
+    times = []
 
     @staticmethod
     def addOpen(order_id, symbol, dir, price, size):
+        Ledger.times.append([order_id, time.time])
         Ledger.pending_orders[order_id] = {"symbol": symbol, "dir": dir, "price": price, "size": size}
 
     @staticmethod
@@ -235,6 +236,15 @@ def main():
             #         exchange.send_add_message(Ledger.current_id, "XLF", Dir.BUY, xlf_ask, 10)
             #         Utils.sell_xlf_equivalents(market_book, exchange)
             #time.sleep(Constants.WAIT_TIME)
+        currentTime = time.time
+        for i, group in enumerate(Ledger.times):
+            if group[1] - currentTime > 10 and group[0] in Ledger.open_orders:
+                exchange.send_cancel_message(group[1])
+
+            if group[1] - currentTime < 10:
+                Ledger.times = Ledger.times[i:]
+                break
+
 
 
 
