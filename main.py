@@ -88,12 +88,12 @@ def main():
 
             if message["symbol"] == "BOND":
                 buyInfo = market_book.best_price_quant("BOND", "buy")
-                if buyInfo[0] < 1000:
+                if buyInfo is not None and buyInfo[0] < 1000:
                     exchange.send_add_message(
                         orderIdNum, "BOND", "BUY", buyInfo[0] + 1, buyInfo[1])
                     orderIdNum += 1
                 sellInfo = market_book.best_price_quant("BOND", "sell")
-                if sellInfo[0] > 1000:
+                if buyInfo is not None and sellInfo[0] > 1000:
                     exchange.send_add_message(orderIdNum, "BOND", "SELL", buyInfo[0] - 1, buyInfo[1])
 
             if message["symbol"] == "VALE":
