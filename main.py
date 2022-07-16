@@ -253,11 +253,10 @@ def main():
             Ledger.confirmOrder(message["order_id"])
         elif message["type"] == "error":
             Ledger.failOrder(message["order_id"])
-            print(message)
         elif message["type"] == "out":
             Ledger.outOrder(message["order_id"])
         elif message["type"] == "reject":
-            print(Ledger.pending_orders[message["order_id"]])
+            print("Rejected", Ledger.pending_orders[message["order_id"]])
             Ledger.failOrder(message["order_id"])
             if message["order_id"] == Ledger.XLFBuy:
                 Ledger.XLFBuy = None
