@@ -221,6 +221,8 @@ def main():
             xlf_bid, xlf_ask = market_book.best_price_both("XLF")
             xlf_equiv_bid, xlf_equiv_ask = Utils.get_xlf_equivalents(market_book)
             Utils.trade_fair_value(exchange, "XLF", xlf_bid, xlf_equiv_bid, 1)
+            Utils.trade_fair_value(exchange, "XLF", xlf_ask, xlf_equiv_ask, 1)
+
 
             ### BOND TRADING ALGORITHM
 
@@ -236,6 +238,7 @@ def main():
             vale_bid, vale_ask = market_book.best_price_both("VALE")
             valbz_bid, valbz_ask = market_book.best_price_both("VALBZ")
             Utils.trade_fair_value(exchange, "VALE", vale_bid, valbz_bid, 1)
+            Utils.trade_fair_value(exchange, "VALE", vale_ask, vale_ask_price, 1)
 
 
 
