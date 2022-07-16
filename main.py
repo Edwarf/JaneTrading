@@ -128,7 +128,7 @@ class Ledger:
         del Ledger.pending_orders[orderId]
     
     @staticmethod
-    def outOrder(orderId, amnt):
+    def outOrder(orderId):
         del Ledger.open_orders[orderId]
 
 def handle_xlf(message):
@@ -222,7 +222,6 @@ def main():
                 exchange.send_add_message(Ledger.current_id, "VALE", Dir.BUY, bid+1, 1)
                 exchange.send_add_message(Ledger.current_id, "VALE", Dir.SELL, ask-1, 1)
 
-<<<<<<< HEAD
             # if message["symbol"] == "XLF":
             #     # Calculate XLF rates
             #     xlf_bid, xlf_ask = market_book.best_price_both("XLF")
@@ -238,16 +237,7 @@ def main():
             #         exchange.send_add_message(Ledger.current_id, "XLF", Dir.BUY, xlf_ask, 10)
             #         Utils.sell_xlf_equivalents(market_book, exchange)
             #time.sleep(Constants.WAIT_TIME)
-        currentTime = time.time
-        for i, group in enumerate(Ledger.times):
-            if group[1] - currentTime > 10 and group[0] in Ledger.open_orders:
-                exchange.send_cancel_message(group[1])
 
-            if group[1] - currentTime < 10:
-                Ledger.times = Ledger.times[i:]
-                break
-
-=======
             if message["symbol"] == "XLF":
                 # Calculate XLF rates
                 xlf_bid, xlf_ask = market_book.best_price_both("XLF")
@@ -262,7 +252,15 @@ def main():
                     exchange.send_add_message(Ledger.current_id, "XLF", Dir.BUY, xlf_ask, 2)
 
             time.sleep(Constants.WAIT_TIME)
->>>>>>> fc7ddfdfe3247b9d567e9ca947a389de3fff40ac
+        
+        currentTime = time.time()
+        for i, group in enumerate(Ledger.times):
+            if group[1] - currentTime > 10 and group[0] in Ledger.open_orders:
+                exchange.send_cancel_message(group[1])
+
+            if group[1] - currentTime < 10:
+                Ledger.times = Ledger.times[i:]
+                break
 
 
 
