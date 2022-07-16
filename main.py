@@ -115,7 +115,7 @@ class Ledger:
 
     @staticmethod
     def addOpen(order_id, symbol, dir, price, size):
-        Ledger.times.append([order_id, time.time])
+        Ledger.times.append([order_id, time.time()])
         Ledger.pending_orders[order_id] = {"symbol": symbol, "dir": dir, "price": price, "size": size}
 
     @staticmethod
