@@ -146,15 +146,15 @@ def main():
         elif message["type"] == "book":
             market_book.update_book(message)
 
-            if message["symbol"] == "BOND":
-                buyInfo = market_book.best_price_quant("BOND", "buy")
-                if buyInfo is not None and buyInfo[0] < 1000:
-                    exchange.send_add_message(
-                        orderIdNum, "BOND", "BUY", buyInfo[0] + 1, buyInfo[1])
-                    orderIdNum += 1
-                sellInfo = market_book.best_price_quant("BOND", "sell")
-                if buyInfo is not None and sellInfo[0] > 1000:
-                    exchange.send_add_message(orderIdNum, "BOND", "SELL", buyInfo[0] - 1, buyInfo[1])
+            #if message["symbol"] == "BOND":
+            #    buyInfo = market_book.best_price_quant("BOND", "buy")
+            #    if buyInfo is not None and buyInfo[0] < 1000:
+            #        exchange.send_add_message(
+            #            orderIdNum, "BOND", "BUY", buyInfo[0] + 1, buyInfo[1])
+            #        orderIdNum += 1
+            #    sellInfo = market_book.best_price_quant("BOND", "sell")
+            #    if buyInfo is not None and sellInfo[0] > 1000:
+            #        exchange.send_add_message(orderIdNum, "BOND", "SELL", buyInfo[0] - 1, buyInfo[1])
 
             if message["symbol"] == "VALE":
 
