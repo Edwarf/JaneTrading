@@ -210,6 +210,7 @@ def main():
             #        exchange.send_add_message(orderIdNum, "BOND", "SELL", buyInfo[0] - 1, buyInfo[1])
 
             if message["symbol"] == "BOND":
+                continue
                 # We'll implement a pennying algorithm for VALE
                 if not(market_book.check_if_offers("VALUE", "buy") and market_book.check_if_offers("VALE", "sell")):
                     continue
@@ -219,7 +220,6 @@ def main():
                 exchange.send_add_message(Ledger.current_id, "VALE", Dir.SELL, ask-1, 1)
 
             if message["symbol"] == "XLF":
-                continue
                 # Calculate XLF rates
                 xlf_bid, xlf_ask = market_book.best_price_both("XLF")
 
