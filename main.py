@@ -220,18 +220,25 @@ def main():
             print('TRADING WINDOW')
 
             ### XLF TRADING ALGORITHM
-            xlf_bid, xlf_ask = market_book.best_price_both("XLF")
-            xlf_equiv_bid, xlf_equiv_ask = Utils.get_xlf_equivalents(market_book)
-            Utils.trade_fair_value(exchange, "XLF", xlf_bid, xlf_equiv_bid, 1)
+            #xlf_bid, xlf_ask = market_book.best_price_both("XLF")
+            #xlf_equiv_bid, xlf_equiv_ask = Utils.get_xlf_equivalents(market_book)
+            #Utils.trade_fair_value(exchange, "XLF", xlf_bid, xlf_equiv_bid, 1)
 
             ### BOND TRADING ALGORITHM
 
-            bond_bid, bond_ask = market_book.best_price_both("BOND")
-            bond_fair_value = 1000
-            Utils.trade_fair_value(exchange, "BOND", bond_bid, bond_fair_value, 1)
-            Utils.trade_fair_value(exchange, "BOND", bond_ask, bond_fair_value, 1)
+            #bond_bid, bond_ask = market_book.best_price_both("BOND")
+            #bond_fair_value = 1000
+            #Utils.trade_fair_value(exchange, "BOND", bond_bid, bond_fair_value, 1)
+            #Utils.trade_fair_value(exchange, "BOND", bond_ask, bond_fair_value, 1)
 
-            ###
+            ### VALE/VALBZ TRADING ALGORITHM
+
+            # Note that VALUE is more liquid than VALBE, so we trade VALE and use VALBZ as the source of truth.
+
+            vale_bid, vale_ask = market_book.best_price_both("VALE")
+            valbz_bid, valbz_ask = market_book.best_price_both("VALBZ")
+            Utils.trade_fair_value(exchange, "VALE", vale_bid, valbz_bid, 1)
+
 
 
 
