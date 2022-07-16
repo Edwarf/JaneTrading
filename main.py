@@ -5,6 +5,7 @@
 # 3) Run in loop: while true; do ./bot.py --test prod-like; sleep 1; done
 
 import argparse
+from pickle import NONE
 import uuid
 from collections import defaultdict, deque
 
@@ -67,7 +68,18 @@ class Constants:
 class Ledger:
     current_id = 0
     assets = defaultdict(lambda: 0)
+    open_orders = defaultdict(lambda: NONE)
+    our_book = MarketBook()
 
+    def addOpen(self, message):
+        self.open_orders[message["order_id"]] = message
+
+    def confirmOrder(self, orderId):
+        self.our_book.add_to_book(self.open_orders[orderId])
+        del self.open_orders[orderId]
+
+    def failOrder(self, orderId):
+        del self.open_orders[orderId]
 
 def handle_xlf(message):
     bid_price, ask_price = Utils.bid_ask_info(message)
@@ -246,6 +258,7 @@ class ExchangeConnection:
 
     def _write_message(self, message):
         Ledger.current_id += 1
+        Ledger.addOpen(message)
         json.dump(message, self.exchange_socket)
         self.exchange_socket.write("\n")
 
@@ -299,6 +312,9 @@ def parse_arguments():
 
 class MarketBook:
     market_book = defaultdict(lambda: {"buy": [], "sell": []})
+
+    def add_to_book(self, trade):
+        self.market_book[trade["symbol"]][trade["dir"].lower()].append([trade["price"], trade["size"]])
 
     def update_book(self, message):
         self.market_book[message["symbol"]] = {
