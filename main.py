@@ -5,11 +5,12 @@
 # 3) Run in loop: while true; do ./bot.py --test prod-like; sleep 1; done
 
 import argparse
-from collections import deque
+from collections import deque, defaultdict
 from enum import Enum
 import time
 import socket
 import json
+
 
 # ~~~~~============== CONFIGURATION  ==============~~~~~
 # Replace "REPLACEME" with your team name!
@@ -25,6 +26,25 @@ team_name = "WHITETIP SHARKS"
 # price, and it prints the current prices for VALE every second. The sample
 # code is intended to be a working example, but it needs some improvement
 # before it will start making good trades!
+
+
+class Utils:
+    @staticmethod
+    def best_price(message, side):
+        if message[side]:
+            return message[side][0][0]
+
+
+class Constants:
+    WAIT_TIME = 30*10**6
+
+
+class Ledger:
+    orders = defaultdict(lambda: "")
+    assets = defaultdict(lambda: 0)
+
+def handle_xlf(book, ledger):
+    pass
 
 
 def main():
@@ -50,6 +70,7 @@ def main():
     vale_bid_price, vale_ask_price = None, None
     vale_last_print_time = time.time()
 
+
     # Here is the main loop of the program. It will continue to read and
     # process messages in a loop until a "close" message is received. You
     # should write to code handle more types of messages (and not just print
@@ -62,6 +83,7 @@ def main():
     # message. Sending a message in response to every exchange message will
     # cause a feedback loop where your bot's messages will quickly be
     # rate-limited and ignored. Please, don't do that!
+
     while True:
         message = exchange.read_message()
 
@@ -79,13 +101,12 @@ def main():
         elif message["type"] == "reject":
             print(message)
         elif message["type"] == "fill":
+
             print(message)
         elif message["type"] == "book":
             if message["symbol"] == "VALE":
 
-                def best_price(side):
-                    if message[side]:
-                        return message[side][0][0]
+
 
                 vale_bid_price = best_price("buy")
                 vale_ask_price = best_price("sell")
