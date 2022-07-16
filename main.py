@@ -111,20 +111,24 @@ class Constants:
 class Ledger:
     current_id = 0
     assets = defaultdict(lambda: 0)
+    pending_orders = defaultdict(lambda: NONE)
     open_orders = defaultdict(lambda: NONE)
-    our_book = MarketBook()
 
     @staticmethod
     def addOpen(order_id, symbol, dir, price, size):
-        Ledger.open_orders[order_id] = {"symbol": symbol, "dir": dir, "price": price, "size": size}
+        Ledger.pending_orders[order_id] = {"symbol": symbol, "dir": dir, "price": price, "size": size}
 
     @staticmethod
     def confirmOrder(orderId):
-        Ledger.our_book.add_to_book(Ledger.open_orders[orderId])
-        del Ledger.open_orders[orderId]
+        Ledger.open_orders[orderId] = Ledger.pending_orders[orderId]
+        del Ledger.pending_orders[orderId]
 
     @staticmethod
     def failOrder(orderId):
+        del Ledger.pending_orders[orderId]
+    
+    @staticmethod
+    def outOrder(orderId, amnt):
         del Ledger.open_orders[orderId]
 
 def handle_xlf(message):
@@ -181,8 +185,13 @@ def main():
         if message["type"] == "close":
             print("The round has ended")
             break
+        elif message["type"] == "ack":
+            Ledger.confirmOrder(message["order_id"])
         elif message["type"] == "error":
+            Ledger.failOrder(message["order_id"])
             print(message)
+        elif message["type"] == "out":
+            Ledger.outOrder(message["order_id"])
         elif message["type"] == "reject":
             print(message)
         elif message["type"] == "fill":
