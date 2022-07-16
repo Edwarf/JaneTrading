@@ -294,8 +294,8 @@ def main():
             ### XLF TRADING ALGORITHM
             xlf_bid, xlf_ask = market_book.best_price_both("XLF")
             xlf_equiv_bid, xlf_equiv_ask = Utils.get_xlf_equivalents(market_book)
-            Utils.trade_fair_value(exchange, "XLF", xlf_bid, xlf_equiv_bid, 1)
-            Utils.trade_fair_value(exchange, "XLF", xlf_ask, xlf_equiv_ask, 1)
+            Utils.trade_fair_value_capped(exchange, "XLF", xlf_bid, xlf_equiv_bid, 1, 50)
+            Utils.trade_fair_value_capped(exchange, "XLF", xlf_ask, xlf_equiv_ask, 1, 50)
 
             Utils.dump_inventory(exchange, "XLF", xlf_bid, xlf_equiv_bid)
             Utils.dump_inventory(exchange, "XLF", xlf_ask, xlf_equiv_ask)
@@ -316,8 +316,8 @@ def main():
             valbz_bid, valbz_ask = market_book.best_price_both("VALBZ")
             Utils.trade_fair_value(exchange, "VALE", vale_bid, vale_fair_value, 1)
             valbz_fair_value = (valbz_ask + valbz_bid)//2
-            Utils.trade_fair_value_capped(
-                exchange, "VALBZ", vale_bid, valbz_fair_value, 1, 3)
+            # Utils.trade_fair_value_capped(
+            #     exchange, "VALBZ", vale_bid, valbz_fair_value, 1, 3)
             if valbz_fair_value - vale_fair_value > 12:
                 exchange.send_convert_message(Ledger.current_id, "VALE", Dir.SELL, 1)
             elif vale_fair_value - valbz_fair_value > 12:
