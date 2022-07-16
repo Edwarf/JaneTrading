@@ -248,13 +248,6 @@ def main():
             valbz_bid, valbz_ask = market_book.best_price_both("VALBZ")
             Utils.trade_fair_value(exchange, "VALE", vale_bid, valbz_bid, 1)
 
-
-
-
-
-
-
-
             trade_time = time.time()
 
             currentTime = time.time()
@@ -266,7 +259,7 @@ def main():
                 if currentTime - group[1] < 10:
                     Ledger.times = Ledger.times[i:]
                     break
-            print(len(Ledger.times))
+            #print(len(Ledger.times))
 
 
 
