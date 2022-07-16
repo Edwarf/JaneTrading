@@ -301,6 +301,7 @@ class ExchangeConnection:
 
     def _write_message(self, message):
         Ledger.current_id += 1
+        print(message)
         Ledger.addOpen(message)
         json.dump(message, self.exchange_socket)
         self.exchange_socket.write("\n")
